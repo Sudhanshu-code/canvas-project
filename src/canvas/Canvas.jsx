@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import Input from "../components/Input";
+import Label from "../components/Label";
+import eraser from "../components/eraser.png";
 
 function Canvas() {
   const ref = useRef();
@@ -92,16 +95,13 @@ function Canvas() {
     <div className="font-mono">
       <div className="flex top-5 left-5 h-auto p-2 w-full items-center justify-center gap-24 ">
         <div>
-          <label htmlFor="size" className="mr-2">
-            Size:
-          </label>
-          <input
+          <Label label="size: " htmlFor="size" className="mr-2" />
+          <Input
             className="border-2 border-black rounded-lg pl-3 py-1"
             type="number"
-            name=""
             id="size"
-            min={3}
-            max={20}
+            min="3"
+            max="20"
             value={brushSize}
             onChange={(e) => setBrushSize(e.target.value)}
           />
@@ -120,45 +120,45 @@ function Canvas() {
               }}
             ></button>
           ))}
-          <div className="flex flex-col-reverse items-center ml-1 ">
-            <label
-              htmlFor="brushColor"
-              className="items-center text-center text-base leading-4 "
-            >
-              Choose More <br /> Colors
-            </label>
-            <input
-              className="border-none bg-transparent h-7 w-7 p-0 cursor-pointer rounded-md "
+          <div className="flex flex-col-reverse h-auto items-center ml-1 ">
+            <Label label={`Choose\nColor`} htmlFor="color" />
+            <Input
               type="color"
-              id="brushColor"
-              value={color}
+              id="color"
+              className="border-none bg-transparent h-7 w-7 p-0 cursor-pointer rounded-md "
+              label={`Choose More Colors`}
               onChange={(e) => setColor(e.target.value)}
+              value={color}
             />
           </div>
         </div>
-        <div className="flex flex-col-reverse items-center ">
-          <label
-            htmlFor="bgcolor"
-            className="items-center text-center text-base leading-4 "
-          >
-            Choose <br /> BgColor
-          </label>
-          <input
-            className="border-none bg-transparent h-7 w-7 rounded-md p-0 cursor-pointer "
-            type="color"
+        <div className="flex flex-col-reverse items-center text-wrap text-center ">
+          <Label label={`Choose BgColor`} htmlFor="bgcolor" />
+          <Input
             id="bgcolor"
-            value={bgColor}
+            type="color"
+            className="border-none bg-transparent h-7 w-7 p-0 cursor-pointer rounded-md "
             onChange={(e) => setBgColor(e.target.value)}
+            value={bgColor}
           />
         </div>
-        <button
+        {/* <EraserSvg
+          height="40"
+          width="40"
           onClick={() => setIsEraser((prev) => !prev)}
-          className={`px-6 py-2 bg-red-500 text-bold rounded-md -skew-x-12 ${
-            isEraser ? "bg-gray-500" : ""
-          }`}
-        >
-          Eraser
-        </button>
+          isEraser
+        /> */}
+        <div className="flex flex-col-reverse items-center">
+          <Label label="Erase" />
+          <img
+            width={28}
+            src={eraser}
+            alt="Eraser"
+            onClick={() => setIsEraser((prev) => !prev)}
+            className={isEraser ? "grayscale " : ""}
+          />
+        </div>
+
         <button
           onClick={clearCanvas}
           className=" px-6 py-2 bg-red-500 text-bold rounded-md -skew-x-12 "
