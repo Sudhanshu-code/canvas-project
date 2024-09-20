@@ -11,9 +11,9 @@ function Button({ text, className = "", ...rest }) {
       {...rest}
     >
       {text == "Download" ? (
-        <img src={download} height={40} width={40} alt={text} />
+        <img src={download} height={30} width={30} alt={text} />
       ) : text == "Reset" ? (
-        <img src={reset} height={40} width={40} alt={text} />
+        <img src={reset} height={30} width={30} alt={text} />
       ) : (
         text
       )}

@@ -11,7 +11,6 @@ function Canvas() {
   const [bgColor, setBgColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(3);
   const [isEraser, setIsEraser] = useState(false);
-  //   const [selectedColor, setSelectedColor] = useState("");
 
   const colors = ["#FFA500", "#008000", "#FF0000", "#0000FF", "#FFFFFF"];
 
@@ -51,13 +50,13 @@ function Canvas() {
     }
   }, [brushSize, isEraser, bgColor]);
 
-  const startDrawing = (e) => {
+  const startDrawing = (x, y) => {
     const canvas = ref.current;
     if (canvas) {
       const context = canvas.getContext("2d");
       if (context) {
         context.beginPath();
-        context.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        context.moveTo(x, y);
         setIsDrawing(true);
       }
     }
@@ -67,7 +66,7 @@ function Canvas() {
     setIsDrawing(false);
   };
 
-  const draw = (e) => {
+  const draw = (x, y) => {
     if (!isDrawing) {
       return;
     }
@@ -76,7 +75,7 @@ function Canvas() {
       const context = canvas.getContext("2d");
       if (context) {
         context.strokeStyle = color;
-        context.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        context.lineTo(x, y);
         context.stroke();
       }
     }
@@ -104,181 +103,161 @@ function Canvas() {
         createEl.href = imgUrl;
 
         // This is the name of our downloaded file
-        createEl.download = "sudhansuh-Paint";
+        createEl.download = "sudhanshu";
         createEl.click();
         createEl.remove();
       }
     }
   };
 
-  return (
-    <div className="font-mono">
-      <div className="flex justify-between items-center p-4 bg-gray-100 w-full">
-        <div className="flex items-center space-x-5">
-          <div className="flex items-center space-x-2">
-            <Label label="Size:" htmlFor="size" />
-            <Input
-              className="border-2 border-black rounded-lg pl-3 py-1"
-              type="number"
-              id="size"
-              min="3"
-              max="20"
-              value={brushSize}
-              onChange={(e) => setBrushSize(e.target.value)}
-            />
-          </div>
+  const handleMouseMove = (e) => {
+    draw(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+  };
+  const handleMouseDown = (e) => {
+    startDrawing(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+  };
+  useEffect(() => {
+    const canvas = ref.current;
 
-          <div className="flex items-center space-x-3">
-            {colors.map((defaultColor) => (
-              <button
-                key={defaultColor}
-                className={`text-3xl rounded-full w-7 h-7 border-2 ${
-                  defaultColor === color ? "border-black" : ""
-                }`}
-                style={{ backgroundColor: defaultColor }}
-                onClick={() => {
-                  setColor(defaultColor);
-                  setIsEraser(false);
-                }}
-              />
-            ))}
-            <div className="flex flex-col-reverse items-center">
-              <Label label="Colors" htmlFor="color" />
-              <Input
-                type="color"
-                id="color"
-                className="border-none bg-transparent h-7 w-7 cursor-pointer rounded-md"
-                onChange={(e) => setColor(e.target.value)}
-                value={color}
-              />
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      startDrawing(x, y);
+    };
+
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      draw(x, y);
+    };
+
+    const handleTouchEnd = (e) => {
+      stopDrawing();
+    };
+
+    if (canvas) {
+      canvas.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+      canvas.addEventListener("touchend", handleTouchEnd);
+
+      return () => {
+        // Clean up event listeners
+        canvas.removeEventListener("touchstart", handleTouchStart);
+        canvas.removeEventListener("touchmove", handleTouchMove);
+        canvas.removeEventListener("touchend", handleTouchEnd);
+      };
+    }
+  }, [isDrawing]);
+
+  return (
+    <>
+      <div className="absolute z-20 flex top-1/2 items-center -left-12 ">
+        <Input
+          className=" pl-2 -rotate-90 "
+          type="range"
+          id="size"
+          min="3"
+          max="20"
+          value={brushSize}
+          onChange={(e) => setBrushSize(e.target.value)}
+        />
+      </div>
+      <div className="font-mono relative h-[90vh]">
+        <div className="flex justify-around items-center p-4 gap-7 bg-gray-100 w-full ">
+          {/* Size, Color, and Background Color Section */}
+          <div className="flex items-center w-full sm:w-auto">
+            {/* Brush Size */}
+
+            <div className="flex items-center md:gap-10 gap-5">
+              {/* Color Picker */}
+              <div className=" grid grid-cols-3 items-center">
+                {colors.map((defaultColor) => (
+                  <button
+                    key={defaultColor}
+                    className={`text-3xl rounded-full w-6 h-6 border-2 ${
+                      defaultColor === color ? "border-black" : ""
+                    }`}
+                    style={{ backgroundColor: defaultColor }}
+                    onClick={() => {
+                      setColor(defaultColor);
+                      setIsEraser(false);
+                    }}
+                  />
+                ))}
+                <div className="flex flex-col-reverse items-center ">
+                  <Label label="Choose" htmlFor="color" />
+                  <Input
+                    type="color"
+                    id="color"
+                    className=" h-6 w-6 cursor-pointer"
+                    onChange={(e) => setColor(e.target.value)}
+                    value={color}
+                  />
+                </div>
+              </div>
+              {/* Background Color */}
+              <div className="flex flex-col-reverse items-center space-x-2">
+                <Label label="BgColor" htmlFor="bgcolor" />
+                <Input
+                  id="bgcolor"
+                  type="color"
+                  className="border-none bg-transparent h-7 w-7 cursor-pointer rounded-md"
+                  onChange={(e) => setBgColor(e.target.value)}
+                  value={bgColor}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse items-center space-x-2">
-            <Label label="Background" htmlFor="bgcolor" />
-            <Input
-              id="bgcolor"
-              type="color"
-              className="border-none bg-transparent h-7 w-7 cursor-pointer rounded-md"
-              onChange={(e) => setBgColor(e.target.value)}
-              value={bgColor}
+          {/* Erase and Reset Section */}
+          <div className="flex items-center justify-end w-full sm:w-auto gap-4">
+            {/* Eraser */}
+            <div className="flex flex-col-reverse items-center">
+              <Label label="Erase" />
+              <img
+                width={20}
+                src={eraser}
+                alt="Eraser"
+                onClick={() => setIsEraser((prev) => !prev)}
+                className={`cursor-pointer ${isEraser ? "grayscale" : ""}`}
+              />
+            </div>
+
+            {/* Reset Button */}
+            <Button
+              onClick={clearCanvas}
+              className=" bg-red-500 text-bold rounded-md "
+              text="Reset"
+            />
+            <Button
+              onClick={downloadImg}
+              className="  text-bold rounded-md"
+              text="Download"
             />
           </div>
         </div>
 
-        <div className="flex items-center">
-          <div className="flex flex-col-reverse items-center ">
-            <Label label="Erase" />
-            <img
-              width={28}
-              src={eraser}
-              alt="Eraser"
-              onClick={() => setIsEraser((prev) => !prev)}
-              className={`cursor-pointer ${isEraser ? "grayscale" : ""}`}
-            />
-          </div>
-
-          {/* Reset Button */}
-          <Button
-            onClick={clearCanvas}
-            className="px-6 bg-red-500 text-bold rounded-md"
-            text="Reset"
-          />
-        </div>
-
-        {/* Download Section */}
-        <Button
-          onClick={downloadImg}
-          className="px-6 text-bold rounded-md"
-          text="Download"
+        <canvas
+          className={` w-full h-full ${
+            isEraser ? "cursor-cell" : "cursor-crosshair"
+          } `}
+          ref={ref}
+          onMouseDown={handleMouseDown}
+          onMouseUp={stopDrawing}
+          onMouseOut={stopDrawing}
+          onMouseMove={handleMouseMove}
         />
       </div>
-
-      <canvas
-        className={`top-0 left-0 w-full h-full overflow-x-hidden overflow-y-hidden ${
-          isEraser ? "cursor-cell" : "cursor-crosshair"
-        } `}
-        ref={ref}
-        onMouseDown={startDrawing}
-        onMouseUp={stopDrawing}
-        onMouseOut={stopDrawing}
-        onMouseMove={draw}
-      />
-    </div>
+    </>
   );
 }
 
 export default Canvas;
-
-// <div className="flex top-5 left-5 h-auto p-2 w-full items-center justify-center gap-24 ">
-//   <div>
-//     <Label label="size: " htmlFor="size" className="mr-2" />
-//     <Input
-//       className="border-2 border-black rounded-lg pl-3 py-1"
-//       type="number"
-//       id="size"
-//       min="3"
-//       max="20"
-//       value={brushSize}
-//       onChange={(e) => setBrushSize(e.target.value)}
-//     />
-//   </div>
-//   <div className="flex">
-//     {colors.map((defaultColor) => (
-//       <button
-//         key={defaultColor}
-//         className={`text-3xl rounded-full w-7 h-7 m-2 border-2 ${
-//           defaultColor == color ? "border-2 border-black" : ""
-//         } `}
-//         style={{ backgroundColor: defaultColor }}
-//         onClick={() => {
-//           setColor(defaultColor);
-//           setIsEraser(false);
-//         }}
-//       ></button>
-//     ))}
-//     <div className="flex flex-col-reverse h-auto items-center ml-1 ">
-//       <Label label={`Choose\nColor`} htmlFor="color" />
-//       <Input
-//         type="color"
-//         id="color"
-//         className="border-none bg-transparent h-7 w-7 p-0 cursor-pointer rounded-md "
-//         label={`Choose More Colors`}
-//         onChange={(e) => setColor(e.target.value)}
-//         value={color}
-//       />
-//     </div>
-//   </div>
-//   <div className="flex flex-col-reverse items-center text-wrap text-center ">
-//     <Label label={`Choose BgColor`} htmlFor="bgcolor" />
-//     <Input
-//       id="bgcolor"
-//       type="color"
-//       className="border-none bg-transparent h-7 w-7 p-0 cursor-pointer rounded-md "
-//       onChange={(e) => setBgColor(e.target.value)}
-//       value={bgColor}
-//     />
-//   </div>
-
-//   <div className="flex flex-col-reverse items-center">
-//     <Label label="Erase" />
-//     <img
-//       width={28}
-//       src={eraser}
-//       alt="Eraser"
-//       onClick={() => setIsEraser((prev) => !prev)}
-//       className={isEraser ? "grayscale " : ""}
-//     />
-//   </div>
-
-//   <Button
-//     onClick={clearCanvas}
-//     className=" px-6 py-2 bg-red-500 text-bold rounded-md -skew-x-12 "
-//     text="Reset"
-//   />
-//   <Button
-//     onClick={downloadImg}
-//     className=" px-6 py-2 bg-red-500 text-bold rounded-md -skew-x-12 "
-//     text="Download"
-//   />
-// </div>;
