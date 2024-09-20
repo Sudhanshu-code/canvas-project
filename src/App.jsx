@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import Canvas from "./canvas/Canvas";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
+      <Analytics />
       <Canvas />
     </>
   );
