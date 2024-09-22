@@ -3,6 +3,8 @@ import Input from "../components/Input";
 import Label from "../components/Label";
 import eraser from "../images/eraser.png";
 import Button from "../components/Button";
+import UndoIcon from "@mui/icons-material/Undo";
+import RedoIcon from "@mui/icons-material/Redo";
 
 function Canvas() {
   const ref = useRef();
@@ -11,6 +13,9 @@ function Canvas() {
   const [bgColor, setBgColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(3);
   const [isEraser, setIsEraser] = useState(false);
+
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
 
   const colors = ["#FFA500", "#008000", "#FF0000", "#0000FF", "#FFFFFF"];
 
@@ -50,11 +55,21 @@ function Canvas() {
     }
   }, [brushSize, isEraser, bgColor]);
 
+  const saveState = () => {
+    const canvas = ref.current;
+    if (canvas) {
+      const currentState = canvas.toDataURL();
+      undoStack.push(currentState); // Push state only if it's different from the last
+      redoStack.length = 0; // Clear redoStack
+    }
+  };
+
   const startDrawing = (x, y) => {
     const canvas = ref.current;
     if (canvas) {
       const context = canvas.getContext("2d");
       if (context) {
+        saveState();
         context.beginPath();
         context.moveTo(x, y);
         setIsDrawing(true);
@@ -97,7 +112,6 @@ function Canvas() {
       const context = canvas.getContext("2d");
       if (context) {
         const imgUrl = canvas.toDataURL();
-        console.log(imgUrl);
 
         const createEl = document.createElement("a");
         createEl.href = imgUrl;
@@ -157,8 +171,47 @@ function Canvas() {
     }
   }, [isDrawing]);
 
+  const undo = () => {
+    const canvas = ref.current;
+    if (canvas && undoStack.length > 0) {
+      const context = canvas.getContext("2d");
+      const imgData = undoStack[undoStack.length - 1]; // Use the last state
+      redoStack.push(undoStack.pop()); // Push current state to redo stack
+      console.log("undo", undoStack.length, "redo", redoStack.length);
+
+      const img = new Image();
+      img.src = imgData;
+      img.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+        context.drawImage(img, 0, 0); // Restore previous state
+      };
+    }
+  };
+
+  const redo = () => {
+    const canvas = ref.current;
+    if (redoStack.length > 0) {
+      const context = canvas.getContext("2d");
+      const imgData = redoStack[redoStack.length - 1]; // Use the last state
+
+      undoStack.push(redoStack.pop()); // Push current state to redo stack
+      console.log("undo", undoStack.length, "redo", redoStack.length);
+      const img = new Image();
+      img.src = imgData;
+
+      img.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+        context.drawImage(img, 0, 0); // Restore previous state
+      };
+    }
+  };
+
   return (
     <>
+      <div className="absolute text-white z-50 flex gap-3 ml-2 top-1/4 items-center">
+        <UndoIcon fontSize="large" className="cursor-pointer" onClick={undo} />
+        <RedoIcon fontSize="large" className="cursor-pointer" onClick={redo} />
+      </div>
       <div className="absolute z-20 flex top-1/2 items-center -left-12 ">
         <Input
           className=" pl-2 -rotate-90 "
